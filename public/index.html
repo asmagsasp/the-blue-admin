@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Blue - Painel Administrativo</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="toast-container" id="toast-container"></div>
+    
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <i class="fa-solid fa-water"></i> THE BLUE
+            </div>
+            <div class="user-profile">
+                <i class="fa-solid fa-circle-user"></i> <span>Administrador</span>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- Form Card -->
+            <section class="form-section card glass-effect">
+                <h2 id="form-title"><i class="fa-solid fa-user-plus"></i> Novo Usuário</h2>
+                <form id="user-form">
+                    <input type="hidden" id="user-id">
+                    
+                    <div class="form-group">
+                        <label for="nome">Nome Completo</label>
+                        <div class="input-with-icon">
+                            <i class="fa-regular fa-user"></i>
+                            <input type="text" id="nome" placeholder="John Doe" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sexo">Sexo</label>
+                        <div class="select-wrapper">
+                            <select id="sexo" required>
+                                <option value="" disabled selected>Selecione</option>
+                                <option value="Masculino">Masculino</option>
+                                <option value="Feminino">Feminino</option>
+                                <option value="Outro">Outro</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="telefone">Telefone</label>
+                        <div class="input-with-icon">
+                            <i class="fa-solid fa-phone"></i>
+                            <input type="text" id="telefone" placeholder="(00) 00000-0000" maxlength="15" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="chave_pix">Chave PIX</label>
+                        <div class="input-with-icon">
+                            <i class="fa-brands fa-pix"></i>
+                            <input type="text" id="chave_pix" placeholder="CPF, E-mail, Celular..." required>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="btn-submit">Cadastrar</button>
+                        <button type="button" class="btn btn-secondary" id="btn-cancel" style="display: none;">Cancelar</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Table Card -->
+            <section class="list-section card glass-effect">
+                <div class="list-header">
+                    <h2><i class="fa-solid fa-users"></i> Usuários Cadastrados</h2>
+                    <div class="user-count">Total: <span id="user-count-badge">0</span></div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table id="users-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nome</th>
+                                <th>Sexo</th>
+                                <th>Telefone</th>
+                                <th>Chave PIX</th>
+                                <th class="actions-col">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-tbody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                    
+                    <div id="empty-state" class="empty-state">
+                        <i class="fa-solid fa-user-xmark"></i>
+                        <p>Nenhum usuário cadastrado na plataforma.</p>
+                        <span class="empty-subtitle">Preencha o formulário ao lado para adicionar o primeiro usuário.</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Confirm Delete Modal -->
+    <div id="delete-modal" class="modal">
+        <div class="modal-content glass-effect">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-triangle-exclamation"></i> Confirmar Exclusão</h3>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja remover o usuário <strong id="delete-user-name" class="highlight-name"></strong>?</p>
+                <div class="warning-alert">
+                    <i class="fa-solid fa-circle-info"></i> Esta ação não pode ser desfeita e removerá o acesso do usuário à plataforma.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                <button class="btn btn-danger" id="confirm-delete-btn"><i class="fa-solid fa-trash-can"></i> Excluir Definitivamente</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Script -->
+    <script src="script.js"></script>
+</body>
+</html>
