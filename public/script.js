@@ -7,6 +7,7 @@ const nomeInput = document.getElementById('nome');
 const sexoSelect = document.getElementById('sexo');
 const telefoneInput = document.getElementById('telefone');
 const chavePixInput = document.getElementById('chave_pix');
+const sugestoesInput = document.getElementById('sugestoes');
 const btnSubmit = document.getElementById('btn-submit');
 const btnCancel = document.getElementById('btn-cancel');
 const formTitle = document.getElementById('form-title');
@@ -140,9 +141,14 @@ function renderTable(users) {
             <td><span class="badge ${badgeClass}">${user.sexo}</span></td>
             <td>${user.telefone}</td>
             <td>${user.chave_pix}</td>
+            <td>
+                <span title="${escapeQuote(user.sugestoes || 'Nenhuma')}">
+                    ${user.sugestoes ? (user.sugestoes.substring(0, 15) + (user.sugestoes.length > 15 ? '...' : '')) : '-'}
+                </span>
+            </td>
             <td class="actions-col">
                 <div class="action-buttons">
-                    <button type="button" class="action-btn edit-btn" onclick="editUser(${user.id}, '${escapeQuote(user.nome)}', '${user.sexo}', '${user.telefone}', '${escapeQuote(user.chave_pix)}', '${escapeQuote(user.foto || '')}')" title="Editar Usuário">
+                    <button type="button" class="action-btn edit-btn" onclick="editUser(${user.id}, '${escapeQuote(user.nome)}', '${user.sexo}', '${user.telefone}', '${escapeQuote(user.chave_pix)}', '${escapeQuote(user.foto || '')}', '${escapeQuote(user.sugestoes || '')}')" title="Editar Usuário">
                         <i class="fa-solid fa-pen"></i>
                     </button>
                     <button type="button" class="action-btn delete-btn" onclick="openDeleteModal(${user.id}, '${escapeQuote(user.nome)}')" title="Excluir Usuário">
@@ -170,7 +176,8 @@ form.addEventListener('submit', async (e) => {
         sexo: sexoSelect.value,
         telefone: telefoneInput.value.trim(),
         chave_pix: chavePixInput.value.trim(),
-        foto: currentFotoBase64
+        foto: currentFotoBase64,
+        sugestoes: sugestoesInput.value.trim()
     };
 
     // Very basic phone validation (must have at least 14 chars with mask)
@@ -223,7 +230,7 @@ form.addEventListener('submit', async (e) => {
 });
 
 // Pre-fill Form for Edit
-window.editUser = function(id, nome, sexo, telefone, chave_pix, fotoBase64) {
+window.editUser = function(id, nome, sexo, telefone, chave_pix, fotoBase64, sugestoes) {
     formTitle.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Editar Usuário';
     btnSubmit.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Salvar Alterações';
     btnCancel.style.display = 'block';
@@ -233,6 +240,7 @@ window.editUser = function(id, nome, sexo, telefone, chave_pix, fotoBase64) {
     sexoSelect.value = sexo;
     telefoneInput.value = telefone;
     chavePixInput.value = chave_pix;
+    sugestoesInput.value = sugestoes || '';
     
     setFotoPreview(fotoBase64);
     
