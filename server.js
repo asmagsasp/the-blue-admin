@@ -14,8 +14,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Supabase Configuration
 // Em Vercel, defina essas chaves em Settings > Environment Variables
-const supabaseUrl = process.env.SUPABASE_URL || 'URL_AQUI_SE_FOR_RODAR_LOCAL';
-const supabaseKey = process.env.SUPABASE_KEY || 'CHAVE_AQUI_SE_FOR_RODAR_LOCAL';
+const supabaseUrl = process.env.SUPABASE_URL || 'https://kggukwkireimgexsezek.supabase.co';
+const supabaseKey = process.env.SUPABASE_KEY || 'sb_publishable_d9lFOKzv88k2Hv9roRdvZQ_X7K9xKAq';
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -24,20 +24,20 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 // 1. Criar novo usuário
 app.post('/usuarios', async (req, res) => {
     const { nome, sexo, telefone, chave_pix, foto, sugestoes } = req.body;
-    
+
     if (!nome || !sexo || !telefone || !chave_pix) {
         return res.status(400).json({ error: 'Todos os campos obrigatórios precisam estar preenchidos' });
     }
-    
+
     const { data, error } = await supabase
         .from('usuarios')
         .insert([{ nome, sexo, telefone, chave_pix, foto: foto || null, sugestoes: sugestoes || null }])
         .select();
-        
+
     if (error) {
         return res.status(500).json({ error: error.message });
     }
-    
+
     res.status(201).json(data[0]);
 });
 
@@ -47,11 +47,11 @@ app.get('/usuarios', async (req, res) => {
         .from('usuarios')
         .select('*')
         .order('id', { ascending: false });
-        
+
     if (error) {
         return res.status(500).json({ error: error.message });
     }
-    
+
     res.json(data);
 });
 
@@ -59,46 +59,46 @@ app.get('/usuarios', async (req, res) => {
 app.put('/usuarios/:id', async (req, res) => {
     const { id } = req.params;
     const { nome, sexo, telefone, chave_pix, foto, sugestoes } = req.body;
-    
+
     if (!nome || !sexo || !telefone || !chave_pix) {
         return res.status(400).json({ error: 'Todos os campos obrigatórios precisam estar preenchidos' });
     }
-    
+
     const { data, error } = await supabase
         .from('usuarios')
         .update({ nome, sexo, telefone, chave_pix, foto: foto || null, sugestoes: sugestoes || null })
         .eq('id', id)
         .select();
-        
+
     if (error) {
         return res.status(500).json({ error: error.message });
     }
-    
+
     if (!data || data.length === 0) {
         return res.status(404).json({ error: 'Usuário não encontrado no Supabase' });
     }
-    
+
     res.json(data[0]);
 });
 
 // 4. Deletar usuário
 app.delete('/usuarios/:id', async (req, res) => {
     const { id } = req.params;
-    
+
     const { data, error } = await supabase
         .from('usuarios')
         .delete()
         .eq('id', id)
         .select();
-        
+
     if (error) {
         return res.status(500).json({ error: error.message });
     }
-    
+
     if (!data || data.length === 0) {
         return res.status(404).json({ error: 'Usuário não encontrado no Supabase' });
     }
-    
+
     res.json({ message: 'Usuário deletado com sucesso' });
 });
 

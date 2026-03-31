@@ -103,14 +103,17 @@ function getSexoBadgeClass(sexo) {
 async function loadUsers() {
     try {
         const res = await fetch(API_URL);
-        if (!res.ok) throw new Error('Falha ao buscar usuários');
+        if (!res.ok) {
+            const errText = await res.text();
+            throw new Error(`Erro ${res.status}: ${errText}`);
+        }
         
         const users = await res.json();
         renderTable(users);
         
     } catch (error) {
-        showToast('Erro ao carregar os dados. Verifique a conexão.', 'error');
-        console.error(error);
+        showToast(error.message.substring(0, 100), 'error');
+        console.error("Vercel/Backend Erro:", error);
     }
 }
 
@@ -216,11 +219,17 @@ form.addEventListener('submit', async (e) => {
             resetForm();
             loadUsers();
         } else {
-            const data = await res.json();
-            showToast(data.error || 'Ocorreu um erro ao salvar o registro.', 'error');
+            const errText = await res.text();
+            try {
+                const data = JSON.parse(errText);
+                showToast(data.error || 'Ocorreu um erro ao salvar o registro.', 'error');
+            } catch(e) {
+                showToast(`Erro ${res.status} do Vercel! Verifique o Log no console (F12).`, 'error');
+                console.error("Erro HTML bruto recebido:", errText);
+            }
         }
     } catch (error) {
-        showToast('Erro de conexão com o servidor.', 'error');
+        showToast('Erro Crítico na Rede: ' + error.message, 'error');
         console.error(error);
     } finally {
         // Reset Loading State
