@@ -24,7 +24,10 @@ const db = new sqlite3.Database(dbPath, (err) => {
             sexo TEXT NOT NULL,
             telefone TEXT NOT NULL,
             chave_pix TEXT NOT NULL
-        )`);
+        )`, () => {
+            // Attempt to add foto column gracefully to existing tables
+            db.run(`ALTER TABLE usuarios ADD COLUMN foto TEXT`, (err) => { /* ignore if exists */ });
+        });
     }
 });
 
@@ -32,16 +35,16 @@ const db = new sqlite3.Database(dbPath, (err) => {
 
 // Create User
 app.post('/usuarios', (req, res) => {
-    const { nome, sexo, telefone, chave_pix } = req.body;
+    const { nome, sexo, telefone, chave_pix, foto } = req.body;
     if (!nome || !sexo || !telefone || !chave_pix) {
         return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
     }
-    const sql = 'INSERT INTO usuarios (nome, sexo, telefone, chave_pix) VALUES (?, ?, ?, ?)';
-    db.run(sql, [nome, sexo, telefone, chave_pix], function(err) {
+    const sql = 'INSERT INTO usuarios (nome, sexo, telefone, chave_pix, foto) VALUES (?, ?, ?, ?, ?)';
+    db.run(sql, [nome, sexo, telefone, chave_pix, foto || null], function(err) {
         if (err) {
             return res.status(500).json({ error: err.message });
         }
-        res.status(201).json({ id: this.lastID, nome, sexo, telefone, chave_pix });
+        res.status(201).json({ id: this.lastID, nome, sexo, telefone, chave_pix, foto });
     });
 });
 
@@ -59,19 +62,19 @@ app.get('/usuarios', (req, res) => {
 // Update User
 app.put('/usuarios/:id', (req, res) => {
     const { id } = req.params;
-    const { nome, sexo, telefone, chave_pix } = req.body;
+    const { nome, sexo, telefone, chave_pix, foto } = req.body;
     if (!nome || !sexo || !telefone || !chave_pix) {
         return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
     }
-    const sql = 'UPDATE usuarios SET nome = ?, sexo = ?, telefone = ?, chave_pix = ? WHERE id = ?';
-    db.run(sql, [nome, sexo, telefone, chave_pix, id], function(err) {
+    const sql = 'UPDATE usuarios SET nome = ?, sexo = ?, telefone = ?, chave_pix = ?, foto = ? WHERE id = ?';
+    db.run(sql, [nome, sexo, telefone, chave_pix, foto || null, id], function(err) {
         if (err) {
             return res.status(500).json({ error: err.message });
         }
         if (this.changes === 0) {
             return res.status(404).json({ error: 'Usuário não encontrado' });
         }
-        res.json({ id, nome, sexo, telefone, chave_pix });
+        res.json({ id, nome, sexo, telefone, chave_pix, foto });
     });
 });
 

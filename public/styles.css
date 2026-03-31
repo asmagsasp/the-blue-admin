@@ -206,6 +206,72 @@ input::placeholder {
     color: var(--text-secondary);
 }
 
+/* Photo Upload */
+.photo-upload-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+.file-input {
+    display: none;
+}
+.photo-preview-label {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: var(--surface-solid);
+    border: 2px dashed var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.2s;
+    background-size: cover;
+    background-position: center;
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    text-align: center;
+}
+.photo-preview-label i {
+    font-size: 1.2rem;
+    margin-bottom: 2px;
+}
+.photo-preview-label:hover {
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
+}
+.photo-preview-label.has-image {
+    border: 2px solid var(--accent-blue);
+    color: transparent;
+}
+.photo-preview-label.has-image i, .photo-preview-label.has-image span {
+    display: none;
+}
+.btn-sm {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+    width: auto;
+    border-radius: 50%;
+    height: 32px;
+    width: 32px;
+}
+
+/* Avatar Thumbnail in Table */
+.avatar-thumb {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: var(--border);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+}
+
 /* Buttons */
 .btn {
     padding: 0.75rem 1.5rem;

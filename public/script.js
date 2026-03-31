@@ -15,6 +15,11 @@ const emptyState = document.getElementById('empty-state');
 const tableEl = document.getElementById('users-table');
 const userCountBadge = document.getElementById('user-count-badge');
 const toastContainer = document.getElementById('toast-container');
+const fotoInput = document.getElementById('foto');
+const fotoPreview = document.getElementById('foto-preview');
+const removeFotoBtn = document.getElementById('remove-foto');
+
+let currentFotoBase64 = '';
 
 // Modal Elements
 const deleteModal = document.getElementById('delete-modal');
@@ -39,6 +44,50 @@ telefoneInput.addEventListener('input', function (e) {
     
     e.target.value = value;
 });
+
+// --- PHOTO UPLOAD LOGIC ---
+fotoInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        // Validate size (max 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            showToast('A imagem deve ter no máximo 2MB.', 'error');
+            resetFoto();
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            currentFotoBase64 = event.target.result;
+            fotoPreview.style.backgroundImage = `url(${currentFotoBase64})`;
+            fotoPreview.classList.add('has-image');
+            removeFotoBtn.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+removeFotoBtn.addEventListener('click', resetFoto);
+
+function setFotoPreview(base64str) {
+    currentFotoBase64 = base64str || '';
+    if (currentFotoBase64) {
+        fotoPreview.style.backgroundImage = `url(${currentFotoBase64})`;
+        fotoPreview.classList.add('has-image');
+        removeFotoBtn.style.display = 'block';
+    } else {
+        resetFoto();
+    }
+}
+
+function resetFoto() {
+    fotoInput.value = '';
+    currentFotoBase64 = '';
+    fotoPreview.style.backgroundImage = 'none';
+    fotoPreview.classList.remove('has-image');
+    removeFotoBtn.style.display = 'none';
+}
+// ----------------------------
 
 // Create Badge CSS Class based on Sexo
 function getSexoBadgeClass(sexo) {
@@ -80,8 +129,12 @@ function renderTable(users) {
     users.forEach(user => {
         const tr = document.createElement('tr');
         const badgeClass = getSexoBadgeClass(user.sexo);
+        const avatarHtml = user.foto 
+            ? `<img src="${user.foto}" class="avatar-thumb" alt="Foto">` 
+            : `<div class="avatar-thumb"><i class="fa-solid fa-user"></i></div>`;
         
         tr.innerHTML = `
+            <td>${avatarHtml}</td>
             <td>#${user.id}</td>
             <td><strong>${user.nome}</strong></td>
             <td><span class="badge ${badgeClass}">${user.sexo}</span></td>
@@ -89,7 +142,7 @@ function renderTable(users) {
             <td>${user.chave_pix}</td>
             <td class="actions-col">
                 <div class="action-buttons">
-                    <button type="button" class="action-btn edit-btn" onclick="editUser(${user.id}, '${escapeQuote(user.nome)}', '${user.sexo}', '${user.telefone}', '${escapeQuote(user.chave_pix)}')" title="Editar Usuário">
+                    <button type="button" class="action-btn edit-btn" onclick="editUser(${user.id}, '${escapeQuote(user.nome)}', '${user.sexo}', '${user.telefone}', '${escapeQuote(user.chave_pix)}', '${escapeQuote(user.foto || '')}')" title="Editar Usuário">
                         <i class="fa-solid fa-pen"></i>
                     </button>
                     <button type="button" class="action-btn delete-btn" onclick="openDeleteModal(${user.id}, '${escapeQuote(user.nome)}')" title="Excluir Usuário">
@@ -116,7 +169,8 @@ form.addEventListener('submit', async (e) => {
         nome: nomeInput.value.trim(),
         sexo: sexoSelect.value,
         telefone: telefoneInput.value.trim(),
-        chave_pix: chavePixInput.value.trim()
+        chave_pix: chavePixInput.value.trim(),
+        foto: currentFotoBase64
     };
 
     // Very basic phone validation (must have at least 14 chars with mask)
@@ -169,7 +223,7 @@ form.addEventListener('submit', async (e) => {
 });
 
 // Pre-fill Form for Edit
-window.editUser = function(id, nome, sexo, telefone, chave_pix) {
+window.editUser = function(id, nome, sexo, telefone, chave_pix, fotoBase64) {
     formTitle.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Editar Usuário';
     btnSubmit.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Salvar Alterações';
     btnCancel.style.display = 'block';
@@ -179,6 +233,8 @@ window.editUser = function(id, nome, sexo, telefone, chave_pix) {
     sexoSelect.value = sexo;
     telefoneInput.value = telefone;
     chavePixInput.value = chave_pix;
+    
+    setFotoPreview(fotoBase64);
     
     // Smooth scroll to top for mobile mostly
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -194,6 +250,7 @@ function resetForm() {
     formTitle.innerHTML = '<i class="fa-solid fa-user-plus"></i> Novo Usuário';
     btnSubmit.innerHTML = 'Cadastrar';
     btnCancel.style.display = 'none';
+    resetFoto();
     nomeInput.focus();
 }
 
