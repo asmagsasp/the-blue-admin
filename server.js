@@ -1,7 +1,7 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 const path = require('path');
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -12,92 +12,97 @@ app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ limit: '5mb', extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Database connection
-const dbPath = process.env.VERCEL ? '/tmp/database.sqlite' : './database.sqlite';
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error('Erro ao conectar com banco de dados SQLite', err.message);
-    } else {
-        console.log('Conectado ao banco de dados SQLite.');
-        db.serialize(() => {
-            db.run(`CREATE TABLE IF NOT EXISTS usuarios (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                nome TEXT NOT NULL,
-                sexo TEXT NOT NULL,
-                telefone TEXT NOT NULL,
-                chave_pix TEXT NOT NULL,
-                foto TEXT,
-                sugestoes TEXT
-            )`);
-            // Attempt to add foto column gracefully to existing tables
-            db.run(`ALTER TABLE usuarios ADD COLUMN foto TEXT`, (err) => { /* ignore if exists */ });
-            db.run(`ALTER TABLE usuarios ADD COLUMN sugestoes TEXT`, (err) => { /* ignore if exists */ });
-        });
-    }
-});
+// Supabase Configuration
+// Em Vercel, defina essas chaves em Settings > Environment Variables
+const supabaseUrl = process.env.SUPABASE_URL || 'URL_AQUI_SE_FOR_RODAR_LOCAL';
+const supabaseKey = process.env.SUPABASE_KEY || 'CHAVE_AQUI_SE_FOR_RODAR_LOCAL';
 
-// Routes
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Create User
-app.post('/usuarios', (req, res) => {
+// Rotas da API (CRUD)
+
+// 1. Criar novo usuário
+app.post('/usuarios', async (req, res) => {
     const { nome, sexo, telefone, chave_pix, foto, sugestoes } = req.body;
+    
     if (!nome || !sexo || !telefone || !chave_pix) {
-        return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
+        return res.status(400).json({ error: 'Todos os campos obrigatórios precisam estar preenchidos' });
     }
-    const sql = 'INSERT INTO usuarios (nome, sexo, telefone, chave_pix, foto, sugestoes) VALUES (?, ?, ?, ?, ?, ?)';
-    db.run(sql, [nome, sexo, telefone, chave_pix, foto || null, sugestoes || null], function(err) {
-        if (err) {
-            return res.status(500).json({ error: err.message });
-        }
-        res.status(201).json({ id: this.lastID, nome, sexo, telefone, chave_pix, foto, sugestoes });
-    });
+    
+    const { data, error } = await supabase
+        .from('usuarios')
+        .insert([{ nome, sexo, telefone, chave_pix, foto: foto || null, sugestoes: sugestoes || null }])
+        .select();
+        
+    if (error) {
+        return res.status(500).json({ error: error.message });
+    }
+    
+    res.status(201).json(data[0]);
 });
 
-// List Users
-app.get('/usuarios', (req, res) => {
-    const sql = 'SELECT * FROM usuarios ORDER BY id DESC';
-    db.all(sql, [], (err, rows) => {
-        if (err) {
-            return res.status(500).json({ error: err.message });
-        }
-        res.json(rows);
-    });
+// 2. Listar usuários
+app.get('/usuarios', async (req, res) => {
+    const { data, error } = await supabase
+        .from('usuarios')
+        .select('*')
+        .order('id', { ascending: false });
+        
+    if (error) {
+        return res.status(500).json({ error: error.message });
+    }
+    
+    res.json(data);
 });
 
-// Update User
-app.put('/usuarios/:id', (req, res) => {
+// 3. Atualizar usuário
+app.put('/usuarios/:id', async (req, res) => {
     const { id } = req.params;
     const { nome, sexo, telefone, chave_pix, foto, sugestoes } = req.body;
+    
     if (!nome || !sexo || !telefone || !chave_pix) {
-        return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
+        return res.status(400).json({ error: 'Todos os campos obrigatórios precisam estar preenchidos' });
     }
-    const sql = 'UPDATE usuarios SET nome = ?, sexo = ?, telefone = ?, chave_pix = ?, foto = ?, sugestoes = ? WHERE id = ?';
-    db.run(sql, [nome, sexo, telefone, chave_pix, foto || null, sugestoes || null, id], function(err) {
-        if (err) {
-            return res.status(500).json({ error: err.message });
-        }
-        if (this.changes === 0) {
-            return res.status(404).json({ error: 'Usuário não encontrado' });
-        }
-        res.json({ id, nome, sexo, telefone, chave_pix, foto, sugestoes });
-    });
+    
+    const { data, error } = await supabase
+        .from('usuarios')
+        .update({ nome, sexo, telefone, chave_pix, foto: foto || null, sugestoes: sugestoes || null })
+        .eq('id', id)
+        .select();
+        
+    if (error) {
+        return res.status(500).json({ error: error.message });
+    }
+    
+    if (!data || data.length === 0) {
+        return res.status(404).json({ error: 'Usuário não encontrado no Supabase' });
+    }
+    
+    res.json(data[0]);
 });
 
-// Delete User
-app.delete('/usuarios/:id', (req, res) => {
+// 4. Deletar usuário
+app.delete('/usuarios/:id', async (req, res) => {
     const { id } = req.params;
-    const sql = 'DELETE FROM usuarios WHERE id = ?';
-    db.run(sql, id, function(err) {
-        if (err) {
-            return res.status(500).json({ error: err.message });
-        }
-        if (this.changes === 0) {
-            return res.status(404).json({ error: 'Usuário não encontrado' });
-        }
-        res.json({ message: 'Usuário deletado com sucesso' });
-    });
+    
+    const { data, error } = await supabase
+        .from('usuarios')
+        .delete()
+        .eq('id', id)
+        .select();
+        
+    if (error) {
+        return res.status(500).json({ error: error.message });
+    }
+    
+    if (!data || data.length === 0) {
+        return res.status(404).json({ error: 'Usuário não encontrado no Supabase' });
+    }
+    
+    res.json({ message: 'Usuário deletado com sucesso' });
 });
 
+// Configuração para Serverless Vercel
 if (!process.env.VERCEL) {
     app.listen(PORT, () => {
         console.log(`Servidor rodando em http://localhost:${PORT}`);
